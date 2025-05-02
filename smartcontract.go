@@ -81,6 +81,22 @@ func (s *SupplyChainContract) CreateProduct(ctx contractapi.TransactionContextIn
 // UpdateProduct allows updating a product's status, owner, description, and category
 func (s *SupplyChainContract) UpdateProduct(ctx contractapi.TransactionContextInterface, id string, newStatus string, newOwner string, newDescription string, newCategory string) error {
 	// Write your implementation here
+
+	product, err := s.QueryProduct(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve product: %v", err)
+	}
+
+	product.Status = newStatus
+	product.Owner = newOwner
+	product.Description = newDescription
+	product.Category = newCategory
+	product.UpdatedAt = time.Now().Format(time.RFC3339)
+
+	if err := s.putProduct(ctx, product); err != nil {
+		return fmt.Errorf("failed to update product: %v", err)
+	}
+
 	return nil
 }
 
