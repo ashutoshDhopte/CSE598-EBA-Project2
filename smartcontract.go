@@ -103,6 +103,18 @@ func (s *SupplyChainContract) UpdateProduct(ctx contractapi.TransactionContextIn
 // TransferOwnership changes the owner of a product
 func (s *SupplyChainContract) TransferOwnership(ctx contractapi.TransactionContextInterface, id, newOwner string) error {
 	// Write your implementation here
+	product, err := s.QueryProduct(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve product: %v", err)
+	}
+
+	product.Owner = newOwner
+	product.UpdatedAt = time.Now().Format(time.RFC3339)
+
+	if err := s.putProduct(ctx, product); err != nil {
+		return fmt.Errorf("failed to update product: %v", err)
+	}
+
 	return nil
 }
 

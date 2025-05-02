@@ -104,6 +104,30 @@ func TestUpdateProduct(t *testing.T) {
 	assertProduct(t, product, "Wireless Headphones", "Sold", "CustomerA", "High-quality wireless headphones", "Advance Electronics")
 }
 
+func TestTransferOwnership(t *testing.T) {
+
+	contract := &SupplyChainContract{}
+	cc, err := contractapi.NewChaincode(contract)
+	assert.NoError(t, err)
+
+	stub := shimtest.NewMockStub("supplychain", cc)
+	ctx := &mockContext{stub: stub}
+
+	stub.MockTransactionStart("tx1")
+	err = contract.CreateProduct(ctx, "p5", "Wireless Headphones", "CompanyE", "Noise-cancelling headphones", "Electronics")
+	stub.MockTransactionEnd("tx1")
+	assert.NoError(t, err)
+
+	stub.MockTransactionStart("tx2")
+	err = contract.TransferOwnership(ctx, "p5", "CustomerA")
+	stub.MockTransactionEnd("tx2")
+	assert.NoError(t, err)
+
+	product, err := contract.QueryProduct(ctx, "p5")
+	assert.NoError(t, err)
+	assertProduct(t, product, "Wireless Headphones", "Manufactured", "CustomerA", "Noise-cancelling headphones", "Electronics")
+}
+
 func TestQueryProduct(t *testing.T) {
 	contract := &SupplyChainContract{}
 	cc, err := contractapi.NewChaincode(contract)
