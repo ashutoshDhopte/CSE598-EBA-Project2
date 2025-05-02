@@ -52,3 +52,52 @@ func assertProduct(t *testing.T, product *Product, name string, status string, o
 	assert.Equal(t, description, product.Description)
 	assert.Equal(t, category, product.Category)
 }
+
+func TestCreateProduct(t *testing.T) {
+	contract := &SupplyChainContract{}
+	cc, err := contractapi.NewChaincode(contract)
+	assert.NoError(t, err)
+
+	stub := shimtest.NewMockStub("supplychain", cc)
+	ctx := &mockContext{stub: stub}
+
+	exists, err := contract.ProductExists(ctx, "p3")
+	assert.NoError(t, err)
+	assert.False(t, exists)
+
+	// Start a mock transaction to set TxTimestamp
+	stub.MockTransactionStart("tx1")
+	err = contract.CreateProduct(ctx, "p3", "Tablet", "CompanyC", "High-performance tablet", "Electronics")
+	stub.MockTransactionEnd("tx1")
+	assert.NoError(t, err)
+
+	exists, err = contract.ProductExists(ctx, "p3")
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	product, err := contract.QueryProduct(ctx, "p3")
+	assert.NoError(t, err)
+	assertProduct(t, product, "Tablet", "Manufactured", "CompanyC", "High-performance tablet", "Electronics")
+}
+
+func TestQueryProduct(t *testing.T) {
+	contract := &SupplyChainContract{}
+	cc, err := contractapi.NewChaincode(contract)
+	assert.NoError(t, err)
+
+	stub := shimtest.NewMockStub("supplychain", cc)
+	ctx := &mockContext{stub: stub}
+
+	stub.MockTransactionStart("tx1")
+	err = contract.CreateProduct(ctx, "p4", "Smartwatch", "CompanyD", "Feature-rich smartwatch", "Electronics")
+	stub.MockTransactionEnd("tx1")
+	assert.NoError(t, err)
+
+	product, err := contract.QueryProduct(ctx, "p4")
+	assert.NoError(t, err)
+	assertProduct(t, product, "Smartwatch", "Manufactured", "CompanyD", "Feature-rich smartwatch", "Electronics")
+
+	_, err = contract.QueryProduct(ctx, "nonexistent")
+	assert.Error(t, err, "the product does not exist")
+	assert.Contains(t, err.Error(), "the product does not exist")
+}

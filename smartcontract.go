@@ -59,6 +59,22 @@ func (s *SupplyChainContract) InitLedger(ctx contractapi.TransactionContextInter
 // CreateProduct creates a new product in the ledger
 func (s *SupplyChainContract) CreateProduct(ctx contractapi.TransactionContextInterface, id, name, owner, description, category string) error {
 	// Write your implementation here
+
+	p := Product{
+		ID:          id,
+		Name:        name,
+		Status:      "Manufactured",
+		Owner:       owner,
+		Description: description,
+		Category:    category,
+		CreatedAt:   time.Now().Format(time.RFC3339),
+		UpdatedAt:   time.Now().Format(time.RFC3339),
+	}
+
+	if err := s.putProduct(ctx, &p); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -77,7 +93,20 @@ func (s *SupplyChainContract) TransferOwnership(ctx contractapi.TransactionConte
 // QueryProduct retrieves a single product from the ledger by ID
 func (s *SupplyChainContract) QueryProduct(ctx contractapi.TransactionContextInterface, id string) (*Product, error) {
 	// Write your implementation here
-	return nil, nil
+	productJSON, err := ctx.GetStub().GetState(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read product from world state: %v", err)
+	}
+	if productJSON == nil {
+		return nil, fmt.Errorf("the product does not exist")
+	}
+
+	var product Product
+	if err := json.Unmarshal(productJSON, &product); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal product JSON: %v", err)
+	}
+
+	return &product, nil
 }
 
 // putProduct is a helper method for inserting or updating a product in the ledger
