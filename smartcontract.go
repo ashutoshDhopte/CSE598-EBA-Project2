@@ -87,10 +87,18 @@ func (s *SupplyChainContract) UpdateProduct(ctx contractapi.TransactionContextIn
 		return fmt.Errorf("failed to retrieve product: %v", err)
 	}
 
-	product.Status = newStatus
-	product.Owner = newOwner
-	product.Description = newDescription
-	product.Category = newCategory
+	if newStatus != "" {
+		product.Status = newStatus
+	}
+	if newOwner != "" {
+		product.Owner = newOwner
+	}
+	if newDescription != "" {
+		product.Description = newDescription
+	}
+	if newCategory != "" {
+		product.Category = newCategory
+	}
 	product.UpdatedAt = time.Now().Format(time.RFC3339)
 
 	if err := s.putProduct(ctx, product); err != nil {
@@ -108,7 +116,9 @@ func (s *SupplyChainContract) TransferOwnership(ctx contractapi.TransactionConte
 		return fmt.Errorf("failed to retrieve product: %v", err)
 	}
 
-	product.Owner = newOwner
+	if newOwner != "" {
+		product.Owner = newOwner
+	}
 	product.UpdatedAt = time.Now().Format(time.RFC3339)
 
 	if err := s.putProduct(ctx, product); err != nil {
